@@ -58,12 +58,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 .tab{background:var(--card);color:var(--muted);border:1px solid var(--line);padding:8px 20px;cursor:pointer;font-size:12.5px;font-weight:700;border-radius:30px;display:flex;align-items:center;gap:6px;letter-spacing:.3px;transition:background .15s,color .15s,border-color .15s,box-shadow .15s}
 .tab:hover{color:var(--navy);border-color:var(--navy-soft);background:var(--panel)}
 .tab.active{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 2px 8px rgba(13,43,78,.18)}
-.tab .x{opacity:0;font-size:10px;color:rgba(255,255,255,.7);transition:opacity .15s}
-.tab:hover .x{opacity:.5}
-.tab.active .x{opacity:.4}
-.tab.active .x:hover{opacity:1;color:#fff}
-.tab:not(.active) .x{color:var(--muted)}
+.tab .x,.tab .ed{opacity:0;font-size:10px;color:rgba(255,255,255,.7);transition:opacity .15s}
+.tab:hover .x,.tab:hover .ed{opacity:.5}
+.tab.active .x,.tab.active .ed{opacity:.4}
+.tab.active .x:hover,.tab.active .ed:hover{opacity:1;color:#fff}
+.tab:not(.active) .x,.tab:not(.active) .ed{color:var(--muted)}
 .tab:not(.active) .x:hover{opacity:1;color:var(--red)}
+.tab:not(.active) .ed:hover{opacity:1;color:var(--green)}
 .addcat{color:var(--green);background:transparent;border:1px dashed var(--green-line);border-radius:30px;cursor:pointer;font-weight:700;font-size:12.5px;padding:8px 16px;transition:.15s}
 .addcat:hover{background:var(--green-soft);border-color:var(--green);color:var(--navy)}
 
@@ -568,14 +569,31 @@ function sym(){return state.displayCurrency==='USD'?'US$':'A$';}
 function fmtMoney(v){const s=sym();const a=fx(v);return(a<0?'-'+s:s)+Math.abs(a).toFixed(2);}
 function fmtDelta(d){const s=sym();const a=fx(d);return(a>=0?'+'+s:'-'+s)+Math.abs(a).toFixed(2);}
 
+/* rename a category (admin only) — keeps order, primals and selections intact */
+function renameCategory(oldName){
+  const n=prompt('Rename category:',oldName);
+  if(n==null)return;
+  const nn=n.trim();
+  if(!nn||nn===oldName)return;
+  if(state.cats[nn]){alert('A category called "'+nn+'" already exists.');return;}
+  state.order=state.order.map(c=>c===oldName?nn:c);
+  state.cats[nn]=state.cats[oldName];
+  delete state.cats[oldName];
+  if(active===oldName)active=nn;
+  save();render();
+}
+
 /* ---------- render ---------- */
 function render(){
   // tabs
   const tabs=document.getElementById('tabs');tabs.innerHTML='';
   state.order.forEach(cat=>{
     const b=document.createElement('button');b.className='tab'+(cat===active?' active':'');
-    b.innerHTML=`<span>${esc(cat)}</span>${isAdmin?'<span class="x" title="Delete category">✕</span>':''}`;
-    b.querySelector('span:first-child').onclick=()=>{active=cat;render();};
+    b.innerHTML=`<span>${esc(cat)}</span>${isAdmin?'<span class="ed" title="Rename category">✎</span><span class="x" title="Delete category">✕</span>':''}`;
+    const lbl=b.querySelector('span:first-child');
+    lbl.onclick=()=>{active=cat;render();};
+    if(isAdmin)lbl.ondblclick=(e)=>{e.stopPropagation();renameCategory(cat);};
+    const ed=b.querySelector('.ed');if(ed)ed.onclick=(e)=>{e.stopPropagation();renameCategory(cat);};
     const x=b.querySelector('.x');if(x)x.onclick=(e)=>{e.stopPropagation();if(confirm('Delete category "'+cat+'" and all its primals?')){delete state.cats[cat];state.order=state.order.filter(c=>c!==cat);if(active===cat)active=state.order[0];save();render();}};
     tabs.appendChild(b);
   });
