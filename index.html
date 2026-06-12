@@ -794,26 +794,42 @@ document.querySelectorAll('.currbtn').forEach(btn=>{
 });
 fxRateInp.oninput=()=>{state.fxRate=parseFloat(fxRateInp.value)||0.64;save();render();};
 
+/* Live AUD→USD: try several free, CORS-friendly sources until one works */
+const FX_SOURCES=[
+  {url:'https://open.er-api.com/v6/latest/AUD',pick:d=>d&&d.rates&&d.rates.USD},
+  {url:'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/aud.json',pick:d=>d&&d.aud&&d.aud.usd},
+  {url:'https://latest.currency-api.pages.dev/v1/currencies/aud.json',pick:d=>d&&d.aud&&d.aud.usd},
+  {url:'https://api.frankfurter.dev/v1/latest?base=AUD&symbols=USD',pick:d=>d&&d.rates&&d.rates.USD},
+  {url:'https://api.frankfurter.app/latest?from=AUD&to=USD',pick:d=>d&&d.rates&&d.rates.USD}
+];
 async function fetchLiveFX(){
   const btn=document.getElementById('liveFxBtn');
   btn.classList.add('loading');btn.textContent='Loading…';
-  try{
-    const res=await fetch('https://api.frankfurter.app/latest?from=AUD&to=USD');
-    if(!res.ok)throw new Error('bad response');
-    const d=await res.json();
-    const rate=d.rates&&d.rates.USD;
-    if(!rate)throw new Error('no rate');
+  let rate=null;
+  for(const src of FX_SOURCES){
+    try{
+      const ctrl=new AbortController();
+      const t=setTimeout(()=>ctrl.abort(),7000);
+      const res=await fetch(src.url,{signal:ctrl.signal,cache:'no-store'});
+      clearTimeout(t);
+      if(!res.ok)continue;
+      const d=await res.json();
+      const r=src.pick(d);
+      if(r&&isFinite(r)){rate=+r;break;}
+    }catch(e){/* try next source */}
+  }
+  if(rate){
     state.fxRate=+rate.toFixed(4);
     fxRateInp.value=state.fxRate;
+    if(state.displayCurrency!=='USD'){state.displayCurrency='USD';syncCurrencyUI();}
     save();render();
-    btn.textContent='✓ Live';
-    setTimeout(()=>{btn.textContent='↻ Live';},2000);
-  }catch(e){
+    btn.textContent='✓ '+state.fxRate;
+    setTimeout(()=>{btn.textContent='↻ Live';},2200);
+  }else{
     btn.textContent='⚠ Retry';
     setTimeout(()=>{btn.textContent='↻ Live';},2500);
-  }finally{
-    btn.classList.remove('loading');
   }
+  btn.classList.remove('loading');
 }
 document.getElementById('liveFxBtn').onclick=fetchLiveFX;
 
