@@ -451,24 +451,29 @@ function setCloud(t){const el=document.getElementById('cloudStatus');if(el)el.te
 /* keep the id counter ahead of any ids already present in a loaded document */
 function bumpUid(s){let m=0;JSON.stringify(s).replace(/"k(\d+)"/g,(_,n)=>{m=Math.max(m,+n);return _;});uid=Math.max(uid,m+1);}
 
-/* ----- per-user overlay: prices + route selection + include toggle ----- */
+/* ----- per-user overlay: prices, labour, route selection, include toggle ----- */
 function extractOverlay(s){
-  const prices={};const selections={};
+  const rows={};const selections={};
   s.order.forEach(cat=>(s.cats[cat]||[]).forEach(blk=>{
     selections[blk.id]={sel:blk.sel,include:blk.include};
-    blk.options.forEach(o=>o.rows.forEach(r=>{prices[r.id]=r.price;}));
+    blk.options.forEach(o=>o.rows.forEach(r=>{rows[r.id]={price:r.price,labour:r.labour};}));
   }));
-  return {prices,selections};
+  return {rows,selections};
 }
 function applyOverlay(tmpl,overlay){
-  const pr=(overlay&&overlay.prices)||{};
+  const rv=(overlay&&overlay.rows)||{};
   const sel=(overlay&&overlay.selections)||{};
   tmpl.order.forEach(cat=>(tmpl.cats[cat]||[]).forEach(blk=>{
     if(sel[blk.id]!=null){
       if(sel[blk.id].sel!=null)blk.sel=sel[blk.id].sel;
       if(sel[blk.id].include!=null)blk.include=sel[blk.id].include;
     }
-    blk.options.forEach(o=>o.rows.forEach(r=>{if(pr[r.id]!=null)r.price=+pr[r.id]||0;}));
+    blk.options.forEach(o=>o.rows.forEach(r=>{
+      if(rv[r.id]!=null){
+        if(rv[r.id].price!=null)r.price=+rv[r.id].price||0;
+        if(rv[r.id].labour!=null)r.labour=+rv[r.id].labour||0;
+      }
+    }));
   }));
   return tmpl;
 }
@@ -612,16 +617,16 @@ function optEl(blk,o,oi){
       <div class="cflds">
         <label class="fld"><i>$/kg</i><span class="pwrap"><input class="n sm" type="number" step="0.01" value="${r.price}" data-f="price"><button class="be" title="Break-even $/kg">⌖</button></span></label>
         <label class="fld"><i>${qlab}</i><input class="n sm" type="number" step="0.001" value="${qShown}" data-f="q" ${ro}></label>
-        <label class="fld"><i>lab $</i><input class="n sm" type="number" step="0.05" value="${r.labour}" data-f="labour" ${ro}></label>
+        <label class="fld"><i>lab $</i><input class="n sm" type="number" step="0.05" value="${r.labour}" data-f="labour"></label>
         <span class="fld out"><i>$/hd</i><span class="rv dollar" data-rowval="${r.id}">–</span></span>
         ${isAdmin?'<button class="rowdel" title="Delete cut">✕</button>':''}
       </div>`;
     row.querySelector('[data-f=price]').oninput=e=>{r.price=parseFloat(e.target.value)||0;save();recalc();};
+    row.querySelector('[data-f=labour]').oninput=e=>{r.labour=parseFloat(e.target.value)||0;save();recalc();};
     row.querySelector('.be').onclick=()=>solveBE(blk,oi,r,row.querySelector('[data-f=price]'));
     if(isAdmin){
       row.querySelector('.cutname').oninput=e=>{r.cut=e.target.value;save();recalc();};
       row.querySelector('[data-f=q]').oninput=e=>{const v=parseFloat(e.target.value)||0;r.q=isKg?v:v/100;save();recalc();};
-      row.querySelector('[data-f=labour]').oninput=e=>{r.labour=parseFloat(e.target.value)||0;save();recalc();};
       row.querySelector('.rowdel').onclick=()=>{o.rows=o.rows.filter(x=>x!==r);save();render();};
     }
     body.appendChild(row);
