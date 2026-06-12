@@ -49,6 +49,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 .currbtn.active[data-curr="USD"]{background:#1a5c2e;color:#fff}
 .fxrow{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--navy);white-space:nowrap;background:#f0faf4;border:1.5px solid var(--green-line);border-radius:8px;padding:6px 12px}
 .fxrow input{width:78px;font-size:13px;font-weight:700;text-align:center}
+.livefx{background:var(--navy);color:#fff;border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
+.livefx:hover{background:var(--navy2)}
+.livefx.loading{opacity:.6;cursor:default}
 
 /* tabs */
 .tabs{display:flex;flex-wrap:wrap;gap:6px;background:var(--bg);padding:16px 22px;align-items:center;justify-content:center;border-bottom:1px solid var(--line)}
@@ -271,6 +274,7 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
     <span>1 AUD&nbsp;=</span>
     <input class="n" type="number" id="fxRateInp" step="0.0001" placeholder="0.6400">
     <span>USD</span>
+    <button class="livefx" id="liveFxBtn" title="Fetch live AUD→USD rate">&#8635; Live</button>
   </div>
   <div class="sep"></div>
   <button class="btn" id="exportBtn">Export</button>
@@ -282,8 +286,8 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
     <span><b>1st option = reference</b> (not boned)</span>
     <span><b style="color:#2e8b46">&#9650; green</b> boning pays</span>
     <span><b style="color:#c0392b">&#9660; red</b> leave whole</span>
-    <span><b style="color:#2e8b46">&#9678;</b> solve break-even $/kg AUD</span>
-    <span>$/kg inputs are always <b>AUD FOB</b></span>
+    <span><b style="color:#2e8b46">&#9678;</b> solve break-even $/kg</span>
+    <span id="fobNote">$/kg inputs are <b>AUD FOB</b></span>
   </div>
 </div>
 <div class="tabs" id="tabs"></div>
@@ -650,13 +654,13 @@ function optEl(blk,o,oi){
     const qShown=isKg?r.q:+(r.q*100).toFixed(4);
     row.innerHTML=`<input class="cutname" value="${esc(r.cut)}" ${ro}>
       <div class="cflds">
-        <label class="fld"><i>$/kg AUD</i><span class="pwrap"><input class="n sm" type="number" step="0.01" value="${r.price}" data-f="price"><button class="be" title="Solve break-even $/kg">⌖</button></span></label>
+        <label class="fld"><i>${state.displayCurrency==='USD'?'$/kg USD':'$/kg AUD'}</i><span class="pwrap"><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.price*(+state.fxRate||0.64)).toFixed(2):r.price}" data-f="price"><button class="be" title="Solve break-even $/kg ${state.displayCurrency}">⌖</button></span></label>
         <label class="fld"><i>${qlab}</i><input class="n sm" type="number" step="0.001" value="${qShown}" data-f="q" ${ro}></label>
         <label class="fld"><i>lab $</i><input class="n sm" type="number" step="0.05" value="${r.labour}" data-f="labour"></label>
         <span class="fld out"><i>$/hd</i><span class="rv dollar" data-rowval="${r.id}">–</span></span>
         ${isAdmin?'<button class="rowdel" title="Delete cut">✕</button>':''}
       </div>`;
-    row.querySelector('[data-f=price]').oninput=e=>{r.price=parseFloat(e.target.value)||0;save();recalc();};
+    row.querySelector('[data-f=price]').oninput=e=>{const v=parseFloat(e.target.value)||0;r.price=state.displayCurrency==='USD'?v/(+state.fxRate||0.64):v;save();recalc();};
     row.querySelector('[data-f=labour]').oninput=e=>{r.labour=parseFloat(e.target.value)||0;save();recalc();};
     row.querySelector('.be').onclick=()=>solveBE(blk,oi,r,row.querySelector('[data-f=price]'));
     if(isAdmin){
@@ -685,7 +689,8 @@ function solveBE(blk,oi,row,inp){
   const f=isKg?row.q:row.q*carc();
   if(f<=0){alert('This cut has 0 yield/weight — set that first, then ⌖ can solve a price.');return;}
   const req=(T-other+totLab)/f;
-  row.price=+req.toFixed(2);inp.value=row.price;
+  row.price=+req.toFixed(2);
+  inp.value=state.displayCurrency==='USD'?(req*(+state.fxRate||0.64)).toFixed(2):row.price;
   inp.classList.remove('flash');void inp.offsetWidth;inp.classList.add('flash');
   save();recalc();
 }
@@ -745,18 +750,41 @@ const fxRateInp=document.getElementById('fxRateInp');
 document.querySelectorAll('.currbtn').forEach(btn=>{
   btn.onclick=()=>{
     state.displayCurrency=btn.dataset.curr;
-    document.querySelectorAll('.currbtn').forEach(b=>b.classList.toggle('active',b===btn));
-    fxRow.style.display=state.displayCurrency==='USD'?'flex':'none';
-    save();recalc();
+    syncCurrencyUI();save();render();
   };
 });
-fxRateInp.oninput=()=>{state.fxRate=parseFloat(fxRateInp.value)||0.64;save();recalc();};
+fxRateInp.oninput=()=>{state.fxRate=parseFloat(fxRateInp.value)||0.64;save();render();};
+
+async function fetchLiveFX(){
+  const btn=document.getElementById('liveFxBtn');
+  btn.classList.add('loading');btn.textContent='Loading…';
+  try{
+    const res=await fetch('https://api.frankfurter.app/latest?from=AUD&to=USD');
+    if(!res.ok)throw new Error('bad response');
+    const d=await res.json();
+    const rate=d.rates&&d.rates.USD;
+    if(!rate)throw new Error('no rate');
+    state.fxRate=+rate.toFixed(4);
+    fxRateInp.value=state.fxRate;
+    save();render();
+    btn.textContent='✓ Live';
+    setTimeout(()=>{btn.textContent='↻ Live';},2000);
+  }catch(e){
+    btn.textContent='⚠ Retry';
+    setTimeout(()=>{btn.textContent='↻ Live';},2500);
+  }finally{
+    btn.classList.remove('loading');
+  }
+}
+document.getElementById('liveFxBtn').onclick=fetchLiveFX;
 
 function syncCurrencyUI(){
   const isUSD=state.displayCurrency==='USD';
   document.querySelectorAll('.currbtn').forEach(b=>b.classList.toggle('active',b.dataset.curr===state.displayCurrency));
   fxRow.style.display=isUSD?'flex':'none';
   fxRateInp.value=state.fxRate||0.64;
+  const note=document.getElementById('fobNote');
+  if(note)note.innerHTML=isUSD?`$/kg inputs are <b>USD FOB</b>`:`$/kg inputs are <b>AUD FOB</b>`;
 }
 
 /* enable/disable the role-specific toolbar controls */
