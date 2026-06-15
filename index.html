@@ -343,23 +343,23 @@ const DEFAULTS={
     {title:"TENDERLOIN",
      options:[
       {name:"Whole — TDR SS/on",rows:[["TDR SS/on",30,0.015,0]]},
-      {name:"Denuded — SS/off",rows:[["TDR SS/off",36,0.0135,5],["Trim 85cl",2.6,0.0015,0],["Fat",0,0,0]]}]},
+      {name:"Denuded — SS/off",rows:[["TDR SS/off",36,0.0135,0.93],["Trim 85cl",2.6,0.0015,0],["Fat",0,0,0]]}]},
     {title:"1 RIB SHORTLOIN VS STRIPLOIN",
      options:[
-      {name:"Whole shortloin",rows:[["1RIB S/LOIN",17,0.052,10],["TDR Butt",28.25,0.008,0]]},
+      {name:"Whole shortloin",rows:[["1RIB S/LOIN",17,0.052,0.48],["TDR Butt",28.25,0.008,0]]},
       {name:"Striploin + TDR SS/on",rows:[["STRIPLOIN",20,0.032,0],["TDR ss/on",33.75,0.015,0],["Trim 80cl",3.6,0.003,0],["Fat & Bone",0.8,0.01,0]]},
       {name:"Striploin Steak Ready + TDR",rows:[["Striploin Steak Ready",20,0.029,0],["TDR ss/on",33.75,0.015,0],["Trim 80cl",3.6,0.003,0],["Fat & Bone",0.8,0.013,0]]}]},
     {title:"0-Rib SHORTLOIN vs STRIPLOIN",
      options:[
-      {name:"Whole shortloin",rows:[["0RIB S/LOIN",13.5,0.049,10],["TDR Butt",23,0.007,0]]},
+      {name:"Whole shortloin",rows:[["0RIB S/LOIN",13.5,0.049,0.51],["TDR Butt",23,0.007,0]]},
       {name:"0Rib Striploin + TDR",rows:[["0Rib STRIPLOIN",14.5,0.026,0],["TDR ss/on",32.79,0.014,0],["Trim 80cl",3.2,0.003,0],["Fat & Bone",1,0.01,0]]},
       {name:"Steak-ready Strip + TDR",rows:[["Striploin s/ready",19.1,0.023,0],["Tdr ss/on",18.5,0.014,0],["Trim 80cl",2.8,0.004,0],["Fat & Bone",0,0.015,0]]}]},
     {title:"7-Rib Section",
      note:"Tomahawk / Full Bone Cube options are estimations only.",
      options:[
-      {name:"Whole OP Rib",rows:[["OP RIB",33.58,0.04,10]]},
+      {name:"Whole OP Rib",rows:[["OP RIB",33.58,0.04,0.63]]},
       {name:"Cube Roll Boned",rows:[["CUBE ROLL",41.56,0.026,0],["Back Rib",12,0.0085,0],["Trim 80cl",7.6,0.002,0],["Fat & Bone",0.6,0.0035,0]]},
-      {name:"Tomahawk",rows:[["TOMAHAWK",11,0.052,15],["Trim 80cl",3.2,0.01,0],["Fat & Bone",0,0,0]]},
+      {name:"Tomahawk",rows:[["TOMAHAWK",11,0.052,0.72],["Trim 80cl",3.2,0.01,0],["Fat & Bone",0,0,0]]},
       {name:"Full Bone Cube Roll",rows:[["Cube Roll",18.5,0.026,0],["Chuck Rib",4.8,0.0072,0],["Short Rib",6.2,0.008,0],["Back Rib",6,0.0085,0],["Trim 80cl",3.2,0.007,0],["Fat & Bone",0.1,0.0053,0]]}]}
   ],
   "FQ CUTS":[
@@ -374,7 +374,7 @@ const DEFAULTS={
     {title:"NECK BONES TRIMMED vs UNTRIMMED",
      options:[
       {name:"Untrimmed",rows:[["Untrimmed neck bone",1.9,0.01465,0]]},
-      {name:"Trimmed + whizz trim",rows:[["Trimmed neck bone",1.8,0.01162,1],["90cl whizz trim",3.8,0.00303,0]]}]},
+      {name:"Trimmed + whizz trim",rows:[["Trimmed neck bone",1.8,0.01162,0.22],["90cl whizz trim",3.8,0.00303,0]]}]},
     {title:"PE Brisket DECKLE vs DECKLE OFF",
      options:[
       {name:"Whole PE Brisket",rows:[["PE BRISKET",12.44,0.036,0]]},
@@ -399,7 +399,9 @@ const DEFAULTS={
      options:[
       {name:"Full Chuck",rows:[["FULL CHUCK",14.45,0.06,0]]},
       {name:"Chuck Roll + trim",rows:[["CHUCK ROLL",14.88,0.044,0],["Trim 85cl",8.87,0.016,0]]},
-      {name:"Chuck Eye Roll + Tail Flap",rows:[["CHUCK EYE ROLL",15.67,0.039,0],["Chuck Tail Flap",20.09,0.004,0],["Trim 85cl",11.3,0.0045,0],["Chuck Roll End",10.93,0.0095,0],["Fat",3,0.003,0]]}]},
+      {name:"Chuck Eye Roll + Tail Flap",rows:[["CHUCK EYE ROLL",15.67,0.039,0],["Chuck Tail Flap",20.09,0.004,0],["Trim 85cl",11.3,0.0045,0],["Chuck Roll End",10.93,0.0095,0],["Fat",3,0.003,0]]}]}
+  ],
+  "RIBS":[
     {title:"SHORT RIB",
      options:[
       {name:"Bone-in 4 Rib Short Rib",rows:[["4 Rib Short Rib",22,0.0121,0]]},
@@ -430,13 +432,13 @@ const DEFAULTS={
      options:[
       {name:"Whole Inside",rows:[["INSIDE",12.11,0.054,0]]},
       {name:"Insco denuded",rows:[["INS-CO",12.97,0.04,0],["Trim 80cl",9,0.0115,0],["Fat",2,0.0025,0]]},
-      {name:"100VL red meat route",rows:[["100VL red meat",10.2,0.03,0.75],["Trim 80cl",3,0.0215,0],["Fat",0.6,0.0025,0]]}]},
+      {name:"100VL red meat route",rows:[["100VL red meat",10.2,0.03,0.06],["Trim 80cl",3,0.0215,0],["Fat",0.6,0.0025,0]]}]},
     {title:"SILVERSIDE",
      options:[
       {name:"Whole Silverside",rows:[["SILVERSIDE",10.5,0.07,0]]},
       {name:"Outside + FDS + Shank",rows:[["OUTSIDE",4.2,0.054,0],["FDS",5,0.002,0],["Shank",4,0.0115,0],["Fat",1,0.0025,0]]},
       {name:"Flats + Eyes (10mm)",rows:[["FLATS",11.5,0.034,0],["EYES 10mm",13,0.0125,0],["FDS",0,0.002,0],["Shank",0,0.0115,0],["Trim 80cl",11.3,0.0155,0],["Fat",3.5,0.0025,0]]},
-      {name:"Flat-Demark + Eye",rows:[["FLAT - Demark",7.5,0.028,0.75],["EYE",8.5,0.015,0],["FDS",5,0.002,0],["Shank",3.8,0.0115,0],["Trim 85cl",3.8,0.01,0],["Fat",1.65,0.0035,0]]}]},
+      {name:"Flat-Demark + Eye",rows:[["FLAT - Demark",7.5,0.028,0.07],["EYE",8.5,0.015,0],["FDS",5,0.002,0],["Shank",3.8,0.0115,0],["Trim 85cl",3.8,0.01,0],["Fat",1.65,0.0035,0]]}]},
     {title:"RUMP",
      options:[
       {name:"Whole Rump (HAM 2090)",rows:[["RUMP",5.2,0.044,0]]},
@@ -471,13 +473,13 @@ const DEFAULTS={
      options:[
       {name:"Whole Inside",rows:[["INSIDE",5.8,0.054,0]]},
       {name:"INSCO",rows:[["INS-CO",6.2,0.04,0],["Cap / trim 85cl",5,0.0115,0],["Fat",0.3,0.0025,0]]},
-      {name:"100VL red meat",rows:[["100VL red meat",6.8,0.0285,0.75],["Cap / trim 85cl",5,0.0235,0],["Fat / waste",0.3,0.002,0]]}]},
+      {name:"100VL red meat",rows:[["100VL red meat",6.8,0.0285,0.07],["Cap / trim 85cl",5,0.0235,0],["Fat / waste",0.3,0.002,0]]}]},
     {title:"SILVERSIDE",
      options:[
       {name:"Whole Silverside",rows:[["SILVERSIDE",4.1,0.07,0]]},
       {name:"Outside route",rows:[["OUTSIDE",4.1,0.054,0],["FDS",3.4,0.002,0],["Shank 90cl",3.4,0.0115,0],["Fat",3.4,0.0025,0]]},
       {name:"Flats + Eyes",rows:[["FLATS",4.5,0.035,0],["EYES",4.5,0.015,0],["FDS",3.4,0.002,0],["Shank",3.4,0.0115,0],["90cl AF",3.05,0.004,0],["Fat",0.7,0.0025,0]]},
-      {name:"100VL Flats + Eyes",rows:[["100VL FLATS",5.1,0.017,0.75],["100VL EYES",5.1,0.009,0],["100VL wedge (SPB)",3.95,0.003,0],["FDS",3.7,0.002,0],["Shank",3.7,0.0115,0],["90cl AF",3.7,0.0225,0],["Fat",0.7,0.005,0]]}]}
+      {name:"100VL Flats + Eyes",rows:[["100VL FLATS",5.1,0.017,0.11],["100VL EYES",5.1,0.009,0],["100VL wedge (SPB)",3.95,0.003,0],["FDS",3.7,0.002,0],["Shank",3.7,0.0115,0],["90cl AF",3.7,0.0225,0],["Fat",0.7,0.005,0]]}]}
   ],
   "TONGUE / CHEEK / TAIL":[
     {title:"TONGUE CUT",
@@ -612,7 +614,8 @@ async function loadInitial(){
 /* ---------- calc ---------- */
 const carc=()=>parseFloat(state.carcase)||0;
 function rowVal(blk,r){return blk.mode==='kg'? r.price*r.q : r.price*r.q*carc();}
-function optNet(blk,o){let v=0;o.rows.forEach(r=>{v+=rowVal(blk,r)-(+r.labour||0)});return v;}
+function labourVal(blk,r){return blk.mode==='kg'? r.labour*r.q : r.labour*r.q*carc();}
+function optNet(blk,o){let v=0;o.rows.forEach(r=>{v+=rowVal(blk,r)-labourVal(blk,r)});return v;}
 /* currency display helpers — all internal values are AUD; fx converts for display only */
 function fx(aud){return state.displayCurrency==='USD'?aud*(+state.fxRate||0.64):aud;}
 function sym(){return state.displayCurrency==='USD'?'US$':'A$';}
@@ -724,12 +727,12 @@ function optEl(blk,o,oi){
       <div class="cflds">
         <label class="fld"><i>${state.displayCurrency==='USD'?'$/kg USD':'$/kg AUD'}</i><span class="pwrap"><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.price*(+state.fxRate||0.64)).toFixed(2):r.price}" data-f="price"><button class="be" title="Solve break-even $/kg ${state.displayCurrency}">⌖</button></span></label>
         <label class="fld"><i>${qlab}</i><input class="n sm" type="number" step="0.001" value="${qShown}" data-f="q" ${ro}></label>
-        <label class="fld"><i>lab $</i><input class="n sm" type="number" step="0.05" value="${r.labour}" data-f="labour"></label>
+        <label class="fld"><i>lab $/kg</i><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.labour*(+state.fxRate||0.64)).toFixed(2):r.labour}" data-f="labour"></label>
         <span class="fld out"><i>$/hd</i><span class="rv dollar" data-rowval="${r.id}">–</span></span>
         ${isAdmin?'<button class="rowdel" title="Delete cut">✕</button>':''}
       </div>`;
     row.querySelector('[data-f=price]').oninput=e=>{const v=parseFloat(e.target.value)||0;r.price=state.displayCurrency==='USD'?v/(+state.fxRate||0.64):v;save();recalc();};
-    row.querySelector('[data-f=labour]').oninput=e=>{r.labour=parseFloat(e.target.value)||0;save();recalc();};
+    row.querySelector('[data-f=labour]').oninput=e=>{const v=parseFloat(e.target.value)||0;r.labour=state.displayCurrency==='USD'?v/(+state.fxRate||0.64):v;save();recalc();};
     row.querySelector('.be').onclick=()=>solveBE(blk,oi,r,row.querySelector('[data-f=price]'));
     if(isAdmin){
       row.querySelector('.cutname').oninput=e=>{r.cut=e.target.value;save();recalc();};
@@ -752,11 +755,11 @@ function solveBE(blk,oi,row,inp){
   let T;
   if(oi===0){let best=-Infinity;blk.options.forEach((x,k)=>{if(k!==0)best=Math.max(best,optNet(blk,x))});T=(best===-Infinity?0:best);}
   else T=optNet(blk,blk.options[0]);
-  let other=0,totLab=0;
-  o.rows.forEach(r=>{totLab+=(+r.labour||0);if(r!==row)other+=rowVal(blk,r);});
+  let other=0;
+  o.rows.forEach(r=>{if(r!==row)other+=rowVal(blk,r)-labourVal(blk,r);});
   const f=isKg?row.q:row.q*carc();
   if(f<=0){alert('This cut has 0 yield/weight — set that first, then ⌖ can solve a price.');return;}
-  const req=(T-other+totLab)/f;
+  const req=(T-other)/f+row.labour;
   row.price=+req.toFixed(2);
   inp.value=state.displayCurrency==='USD'?(req*(+state.fxRate||0.64)).toFixed(2):row.price;
   inp.classList.remove('flash');void inp.offsetWidth;inp.classList.add('flash');
