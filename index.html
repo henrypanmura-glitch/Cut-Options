@@ -343,6 +343,7 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
   <button class="btn" id="exportBtn">Export</button>
   <button class="btn ghost" id="importBtn">Import</button>
   <input type="file" id="importFile" accept="application/json" style="display:none">
+  <button class="btn ghost" id="snapshotBtn" style="display:none">💾 Save as reset point</button>
   <button class="btn ghost" id="resetBtn">Reset to sheet</button>
   <span id="cloudStatus" style="font-size:11px;color:var(--muted);font-weight:600;align-self:center"></span>
   <button class="legend-toggle" id="legendToggle">? Legend</button>
@@ -565,6 +566,22 @@ let isAdmin=false;                       // admin edits the master options; ever
 let searchQuery='';
 function userLsKey(){ return (currentUser?LS_KEY+'_'+currentUser.id:LS_KEY)+'_overlay'; }
 function tmplLsKey(){ return LS_KEY+'_template'; }
+function snapLsKey(){ return LS_KEY+'_snapshot'; }
+async function saveSnapshot(){
+  const snap=JSON.parse(JSON.stringify(state));
+  try{localStorage.setItem(snapLsKey(),JSON.stringify(snap));}catch(e){}
+  if(sb&&currentUser){
+    try{await sb.from('cut_template').upsert({id:'snapshot',data:snap,updated_at:new Date().toISOString()});}catch(e){}
+  }
+}
+async function loadSnapshot(){
+  if(sb){
+    try{const {data,error}=await sb.from('cut_template').select('data').eq('id','snapshot').maybeSingle();
+      if(!error&&data&&data.data&&data.data.cats)return data.data;}catch(e){}
+  }
+  try{const j=localStorage.getItem(snapLsKey());if(j){const p=JSON.parse(j);if(p&&p.cats)return p;}}catch(e){}
+  return null;
+}
 function setCloud(t){const el=document.getElementById('cloudStatus');if(el)el.textContent=t;}
 
 /* keep the id counter ahead of any ids already present in a loaded document */
@@ -909,11 +926,23 @@ const carcInp=document.getElementById('carcase');
 const resetBtn=document.getElementById('resetBtn');
 const importBtn=document.getElementById('importBtn');
 carcInp.oninput=()=>{state.carcase=parseFloat(carcInp.value)||0;save();recalc();};
+document.getElementById('snapshotBtn').onclick=async()=>{
+  if(!isAdmin)return;
+  if(confirm('Save current yields & pricing as the reset point? This will become what "Reset to sheet" restores.')){
+    await saveSnapshot();
+    setCloud('✓ reset point saved');
+    setTimeout(()=>setCloud('✓ saved to cloud'),2000);
+  }
+};
 resetBtn.onclick=()=>{
   if(isAdmin){
-    if(confirm('Reset the master options to the original sheet values? This replaces what everyone sees.')){
-      try{localStorage.removeItem(tmplLsKey());}catch(e){}
-      state=buildState(DEFAULTS);active=state.order[0];carcInp.value=state.carcase;save();render();
+    if(confirm('Reset back to your saved reset point (or original sheet if none saved)? This replaces what everyone sees.')){
+      (async()=>{
+        const snap=await loadSnapshot();
+        if(snap){state=snap;bumpUid(state);}
+        else{try{localStorage.removeItem(tmplLsKey());}catch(e){}state=buildState(DEFAULTS);}
+        active=state.order[0];carcInp.value=state.carcase;save();render();
+      })();
     }
   }else{
     if(confirm('Reset your $/kg back to the master prices?')){
@@ -998,6 +1027,7 @@ document.getElementById('legendToggle').onclick=function(){
 /* enable/disable the role-specific toolbar controls */
 function applyRole(){
   importBtn.style.display=isAdmin?'':'none';
+  document.getElementById('snapshotBtn').style.display=isAdmin?'':'none';
   resetBtn.textContent=isAdmin?'Reset to sheet':'Reset my prices';
   document.getElementById('roleTag').textContent=isAdmin?'admin':'user';
 }
