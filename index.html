@@ -245,6 +245,11 @@ input.n[readonly]{background:#f3f6fb;border-color:var(--line2);color:var(--navy2
 input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
 .title[readonly]:hover,.opt-name[readonly]:hover,.cutname[readonly]:hover{background:transparent;box-shadow:none}
 .title[readonly]:focus,.opt-name[readonly]:focus,.cutname[readonly]:focus{background:transparent;box-shadow:none}
+/* duplicate-cut conflict */
+.card.conflict{border-color:#e67e22;box-shadow:0 0 0 3px rgba(230,126,34,.2),var(--shadow-md)}
+.card.conflict .card-head{background:#fff8ec}
+.dupwarn{display:none;position:fixed;left:0;right:0;bottom:54px;background:#fff4d6;border-top:2px solid #e67e22;color:#7d4112;font-size:12px;font-weight:600;padding:8px 22px;z-index:29;line-height:1.5}
+.dupwarn.show{display:block}
 </style>
 </head>
 <body>
@@ -315,6 +320,7 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
 <div class="tabs" id="tabs"></div>
 <div class="wrap" id="wrap"></div>
 
+<div class="dupwarn" id="dupWarn"></div>
 <div class="bottombar">
   <div class="gt">Selected routes &mdash; total off carcase <b id="grandTotal">A$0.00</b> <span id="currLabel" style="font-size:12px;color:var(--brand-green)">AUD FOB</span></div>
   <div class="perkg" id="perKg"></div>
@@ -636,7 +642,7 @@ function render(){
 }
 
 function cardEl(blk){
-  const card=document.createElement('div');card.className='card';
+  const card=document.createElement('div');card.className='card';card.dataset.blkid=blk.id;
   const head=document.createElement('div');head.className='card-head';
   head.innerHTML=`<input class="title" value="${esc(blk.title)}" ${isAdmin?'':'readonly'}>
     <label class="inc"><input type="checkbox" ${blk.include?'checked':''} data-inc> in total</label>
@@ -734,8 +740,32 @@ function solveBE(blk,oi,row,inp){
   save();recalc();
 }
 
+/* Generic cut name pattern — fat, bone, trim by-products are legitimately repeated */
+const GENERIC_CUT=/^(fat|bone|tip|waste)(\s|$)|fat\s*[&\/]\s*bone|\btrim\b|whiz/i;
+
 function recalc(){
   let grand=0;const bd=[];
+
+  /* ---- conflict detection: find significant cut names used in more than one included block ---- */
+  const cutUsage={};   // UPPERCASE_CUT_NAME -> Set of blk.id
+  const conflictBlks=new Set();
+  state.order.forEach(cat=>{
+    (state.cats[cat]||[]).forEach(blk=>{
+      if(!blk.include)return;
+      const selOpt=blk.options[blk.sel]||blk.options[0];
+      selOpt.rows.forEach(r=>{
+        const n=(r.cut||'').trim();
+        if(!n||GENERIC_CUT.test(n))return;
+        const key=n.toUpperCase();
+        if(!cutUsage[key])cutUsage[key]=new Set();
+        cutUsage[key].add(blk.id);
+      });
+    });
+  });
+  const conflicts=Object.entries(cutUsage).filter(([,v])=>v.size>1);
+  conflicts.forEach(([,v])=>v.forEach(id=>conflictBlks.add(id)));
+
+  /* ---- main calc loop (unchanged) ---- */
   state.order.forEach(cat=>{
     (state.cats[cat]||[]).forEach(blk=>{
       const baseNet=optNet(blk,blk.options[0]);
@@ -749,6 +779,22 @@ function recalc(){
       if(blk.include){const sn=optNet(blk,blk.options[blk.sel]||blk.options[0]);grand+=sn;bd.push([blk.title,(blk.options[blk.sel]||blk.options[0]).name,sn]);}
     });
   });
+
+  /* ---- apply conflict highlight to visible cards ---- */
+  document.querySelectorAll('.card[data-blkid]').forEach(el=>{
+    el.classList.toggle('conflict',conflictBlks.has(el.dataset.blkid));
+  });
+  const warn=document.getElementById('dupWarn');
+  if(warn){
+    if(conflicts.length){
+      warn.innerHTML='⚠ Duplicate cuts are counted more than once — uncheck <b>in total</b> on one of the highlighted primals: '+
+        conflicts.map(([k])=>'<b>'+esc(k)+'</b>').join(', ');
+      warn.classList.add('show');
+    }else{
+      warn.classList.remove('show');
+    }
+  }
+
   document.getElementById('grandTotal').textContent=fmtMoney(grand);
   const c=carc();document.getElementById('perKg').textContent=c>0?('= '+fmtMoney(grand/c)+' / kg carcase'):'';
   const cl=document.getElementById('currLabel');if(cl)cl.textContent=state.displayCurrency==='USD'?`USD FOB (1 AUD = ${(+state.fxRate||0.64).toFixed(4)} USD)`:'AUD FOB';
