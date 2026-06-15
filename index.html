@@ -296,6 +296,15 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
 .gpl-other{text-align:right;color:var(--muted);white-space:nowrap}
 .gpl-other.winner{color:var(--green);font-weight:700}
 .gpl-empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 20px}
+/* region sub-tabs */
+.gpl-subtabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;border-bottom:1px solid var(--line);padding-bottom:12px}
+.gpl-subtab{background:var(--card);color:var(--muted);border:1px solid var(--line);padding:7px 16px;cursor:pointer;font-size:12px;font-weight:700;border-radius:var(--r-pill);letter-spacing:.2px;box-shadow:var(--shadow);transition:transform .18s var(--ease),background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)}
+.gpl-subtab:hover{color:var(--navy);border-color:var(--navy-soft);background:var(--panel)}
+.gpl-subtab:active{transform:scale(.96)}
+.gpl-subtab.active{background:linear-gradient(180deg,#1a416e,var(--navy));color:#fff;border-color:var(--navy);box-shadow:0 4px 14px rgba(13,43,78,.24)}
+.gpl-subtab.master{color:var(--green);border-color:var(--green-line)}
+.gpl-subtab.master:hover{background:var(--green-soft)}
+.gpl-subtab.master.active{background:linear-gradient(180deg,#1a5f3c,var(--green));color:#fff;border-color:var(--green);box-shadow:0 4px 14px rgba(46,139,70,.28)}
 /* weekly head */
 .wh-box{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-md);padding:14px 16px;margin-bottom:18px}
 .wh-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
@@ -605,8 +614,10 @@ let currentUser=null;
 let isAdmin=false;                       // admin edits the master options; everyone else edits only $/kg
 let searchQuery='';
 let globalPriceListActive=false;
-let globalPrices={};  // { userId: { name, prices: { cutId: price_AUD } } }
+let globalPrices={};  // { userId: { name, prices: { region: { cutId: price_AUD } } } }
 let weeklyHead={};    // { gradeKey: head_count } — shared, admin-edited
+const REGIONS=['Japan','China','USA','SEA','MENA','PNG','Domestic','Europe'];
+let gplRegion='master';  // which Global Price List sub-tab: 'master' or a region name
 
 /* ===== full beef cut catalogue (from the master price sheet) ===== */
 const PRICE_SHEET=[
@@ -991,70 +1002,128 @@ function optEl(blk,o,oi){
   return opt;
 }
 
+/* best price for a cut within one region (across all salesmen) */
+function bestInRegion(cutId,region){
+  let best=-Infinity,name='—';
+  Object.values(globalPrices).forEach(s=>{
+    const p=parseFloat(((s.prices||{})[region]||{})[cutId]);
+    if(!isNaN(p)&&p>best){best=p;name=s.name;}
+  });
+  return {best,name};
+}
+
 function renderGlobalPriceList(){
   const wrap=document.getElementById('wrap');wrap.innerHTML='';
   wrap.className='wrap gpl-wrap';
 
-  const cuts=getAllCuts();
-  const uid=currentUser?.id||'local';
-  const myPrices=Object.assign({},(globalPrices[uid]||{}).prices||{});
-  const others=Object.entries(globalPrices).filter(([id])=>id!==uid);
-  const allIds=Object.keys(globalPrices);
-
+  const isMaster=gplRegion==='master';
   const intro=document.createElement('div');intro.className='gpl-intro';
-  intro.innerHTML=`<div><h2>Global Price List</h2><p>Enter your best $/kg for each cut. The highest price across all salesmen is highlighted in green.</p></div>`;
+  intro.innerHTML=`<div><h2>Global Price List</h2><p>${isMaster
+    ?'Best price for each cut across <b>every region</b>. Open a region tab to enter prices.'
+    :'Enter your best $/kg for each cut in <b>'+esc(gplRegion)+'</b>. The highest across all salesmen is green.'}</p></div>`;
   const refBtn=document.createElement('button');refBtn.className='gpl-refresh';refBtn.textContent='↻ Refresh';
   refBtn.onclick=async()=>{refBtn.textContent='Loading…';await loadPriceList();await loadWeeklyHead();renderGlobalPriceList();};
   intro.appendChild(refBtn);
   wrap.appendChild(intro);
 
-  // ----- Weekly Head (kill schedule) section -----
-  renderWeeklyHeadSection(wrap);
+  // ----- region sub-tabs -----
+  const sub=document.createElement('div');sub.className='gpl-subtabs';
+  const mkSub=(label,val)=>{
+    const b=document.createElement('button');
+    b.className='gpl-subtab'+(gplRegion===val?' active':'')+(val==='master'?' master':'');
+    b.textContent=label;
+    b.onclick=()=>{gplRegion=val;renderGlobalPriceList();};
+    return b;
+  };
+  sub.appendChild(mkSub('★ Master','master'));
+  REGIONS.forEach(r=>sub.appendChild(mkSub(r,r)));
+  wrap.appendChild(sub);
 
+  if(isMaster){
+    renderWeeklyHeadSection(wrap);
+    renderMasterTable(wrap);
+  }else{
+    renderRegionTable(wrap,gplRegion);
+  }
+}
+
+/* MASTER: best price per cut across all regions, with a column per region */
+function renderMasterTable(wrap){
+  const cuts=getAllCuts();
   const tbl=document.createElement('table');tbl.className='gpl-table';
-
-  // thead
-  const thead=document.createElement('thead');
-  const hrow=document.createElement('tr');
-  const headers=['Cut','Best $/kg','Best By','Your $/kg',...others.map(([,v])=>v.name)];
-  headers.forEach((h,i)=>{
-    const th=document.createElement('th');th.textContent=h;
-    if(i>=1)th.className='num';
-    hrow.appendChild(th);
+  const thead=document.createElement('thead');const hrow=document.createElement('tr');
+  ['Cut','Best $/kg','Best Region','Best By',...REGIONS].forEach((h,i)=>{
+    const th=document.createElement('th');th.textContent=h;if(i>=1)th.className='num';hrow.appendChild(th);
   });
   thead.appendChild(hrow);tbl.appendChild(thead);
 
   const tbody=document.createElement('tbody');
-  const pendingPrices=Object.assign({},myPrices);
+  const byCat={};cuts.forEach(c=>{(byCat[c.category]=byCat[c.category]||[]).push(c);});
+  Object.entries(byCat).forEach(([cat,catCuts])=>{
+    const catRow=document.createElement('tr');catRow.className='gpl-cat-row';
+    const catTd=document.createElement('td');catTd.colSpan=4+REGIONS.length;catTd.textContent=cat;
+    catRow.appendChild(catTd);tbody.appendChild(catRow);
+
+    catCuts.forEach(c=>{
+      const perReg={};let overall=-Infinity,bestReg='—',bestName='—';
+      REGIONS.forEach(r=>{
+        const br=bestInRegion(c.id,r);perReg[r]=br;
+        if(br.best>overall){overall=br.best;bestReg=r;bestName=br.name;}
+      });
+      const row=document.createElement('tr');
+      const tdCut=document.createElement('td');tdCut.className='gpl-cut';tdCut.textContent=c.cut;row.appendChild(tdCut);
+      const tdBest=document.createElement('td');tdBest.className='gpl-best';tdBest.textContent=overall>-Infinity?fmtMoney(overall):'—';row.appendChild(tdBest);
+      const tdReg=document.createElement('td');tdReg.className='gpl-bestby';tdReg.textContent=overall>-Infinity?bestReg:'—';row.appendChild(tdReg);
+      const tdBy=document.createElement('td');tdBy.className='gpl-bestby';tdBy.textContent=bestName;row.appendChild(tdBy);
+      REGIONS.forEach(r=>{
+        const td=document.createElement('td');
+        const v=perReg[r].best;
+        const isWin=v>-Infinity&&Math.abs(v-overall)<0.0001;
+        td.className='gpl-other'+(isWin?' winner':'');
+        td.textContent=v>-Infinity?fmtMoney(v):'—';
+        row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+  });
+  tbl.appendChild(tbody);wrap.appendChild(tbl);
+}
+
+/* REGION: per-salesman price entry for one region */
+function renderRegionTable(wrap,region){
+  const cuts=getAllCuts();
+  const uid=currentUser?.id||'local';
+  const myPrices=Object.assign({},((globalPrices[uid]||{}).prices||{})[region]||{});
+  const others=Object.entries(globalPrices).filter(([id])=>id!==uid);
+  const allIds=Object.keys(globalPrices);
+
+  const tbl=document.createElement('table');tbl.className='gpl-table';
+  const thead=document.createElement('thead');const hrow=document.createElement('tr');
+  ['Cut','Best $/kg','Best By','Your $/kg',...others.map(([,v])=>v.name)].forEach((h,i)=>{
+    const th=document.createElement('th');th.textContent=h;if(i>=1)th.className='num';hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);tbl.appendChild(thead);
+
+  const tbody=document.createElement('tbody');
+  const pending=Object.assign({},myPrices);
   let saveHandle=null;
-
-  // group by category
-  const byCat={};
-  cuts.forEach(c=>{if(!byCat[c.category])byCat[c.category]=[];byCat[c.category].push(c);});
-
+  const byCat={};cuts.forEach(c=>{(byCat[c.category]=byCat[c.category]||[]).push(c);});
   Object.entries(byCat).forEach(([cat,catCuts])=>{
     const catRow=document.createElement('tr');catRow.className='gpl-cat-row';
     const catTd=document.createElement('td');catTd.colSpan=4+others.length;catTd.textContent=cat;
     catRow.appendChild(catTd);tbody.appendChild(catRow);
 
     catCuts.forEach(c=>{
-      // find best across everyone
-      let bestPrice=-Infinity;let bestName='—';
+      let bestPrice=-Infinity,bestName='—';
       allIds.forEach(sid=>{
-        const p=parseFloat((globalPrices[sid]?.prices||{})[c.id]);
+        const p=parseFloat(((globalPrices[sid]?.prices||{})[region]||{})[c.id]);
         if(!isNaN(p)&&p>bestPrice){bestPrice=p;bestName=globalPrices[sid].name;}
       });
-
       const row=document.createElement('tr');
-
       const tdCut=document.createElement('td');tdCut.className='gpl-cut';tdCut.textContent=c.cut;row.appendChild(tdCut);
-
-      const tdBest=document.createElement('td');tdBest.className='gpl-best';
-      tdBest.textContent=bestPrice>-Infinity?fmtMoney(bestPrice):'—';row.appendChild(tdBest);
-
+      const tdBest=document.createElement('td');tdBest.className='gpl-best';tdBest.textContent=bestPrice>-Infinity?fmtMoney(bestPrice):'—';row.appendChild(tdBest);
       const tdBy=document.createElement('td');tdBy.className='gpl-bestby';tdBy.textContent=bestName;row.appendChild(tdBy);
 
-      // own editable price
       const tdMine=document.createElement('td');tdMine.className='gpl-mine';
       const inp=document.createElement('input');
       inp.type='number';inp.className='n sm';inp.step='0.01';inp.placeholder='—';
@@ -1062,22 +1131,24 @@ function renderGlobalPriceList(){
       inp.value=myRaw!=null?(state.displayCurrency==='USD'?(myRaw*(+state.fxRate||0.64)).toFixed(2):myRaw):'';
       inp.oninput=e=>{
         const v=parseFloat(e.target.value);
-        if(isNaN(v)||e.target.value.trim()==='')delete pendingPrices[c.id];
-        else pendingPrices[c.id]=state.displayCurrency==='USD'?v/(+state.fxRate||0.64):v;
-        clearTimeout(saveHandle);saveHandle=setTimeout(()=>saveMyPriceList(Object.assign({},pendingPrices)),800);
+        if(isNaN(v)||e.target.value.trim()==='')delete pending[c.id];
+        else pending[c.id]=state.displayCurrency==='USD'?v/(+state.fxRate||0.64):v;
+        clearTimeout(saveHandle);saveHandle=setTimeout(()=>{
+          const full=Object.assign({},(globalPrices[uid]||{}).prices||{});
+          full[region]=Object.assign({},pending);
+          saveMyPriceList(full);
+        },800);
       };
       tdMine.appendChild(inp);row.appendChild(tdMine);
 
-      // other salesmen
       others.forEach(([sid,sv])=>{
-        const tdO=document.createElement('td');
-        const p=sv.prices[c.id];
-        const isWinner=p!=null&&bestPrice>-Infinity&&Math.abs(+p-bestPrice)<0.0001;
-        tdO.className='gpl-other'+(isWinner?' winner':'');
-        tdO.textContent=p!=null?fmtMoney(+p):'—';
-        row.appendChild(tdO);
+        const td=document.createElement('td');
+        const p=((sv.prices||{})[region]||{})[c.id];
+        const isWin=p!=null&&bestPrice>-Infinity&&Math.abs(+p-bestPrice)<0.0001;
+        td.className='gpl-other'+(isWin?' winner':'');
+        td.textContent=p!=null?fmtMoney(+p):'—';
+        row.appendChild(td);
       });
-
       tbody.appendChild(row);
     });
   });
