@@ -801,7 +801,7 @@ function optEl(blk,o,oi){
       <div class="cflds">
         <label class="fld"><i>${state.displayCurrency==='USD'?'$/kg USD':'$/kg AUD'}</i><span class="pwrap"><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.price*(+state.fxRate||0.64)).toFixed(2):r.price}" data-f="price"><button class="be" title="Break-even ⌖ — solve the $/kg (${state.displayCurrency}) this cut needs for boning to match leaving the primal whole">⌖</button></span></label>
         <label class="fld"><i>${qlab}</i><input class="n sm" type="number" step="0.001" value="${qShown}" data-f="q" ${ro}></label>
-        <label class="fld"><i>lab $/kg</i><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.labour*(+state.fxRate||0.64)).toFixed(2):r.labour}" data-f="labour"></label>
+        <label class="fld"><i>extra boning/packing $/kg</i><input class="n sm" type="number" step="0.01" value="${state.displayCurrency==='USD'?(r.labour*(+state.fxRate||0.64)).toFixed(2):r.labour}" data-f="labour"></label>
         <span class="fld out"><i>$/hd</i><span class="rv dollar" data-rowval="${r.id}">–</span></span>
         ${isAdmin?'<button class="rowdel" title="Delete cut">✕</button>':''}
       </div>`;
