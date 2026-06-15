@@ -300,15 +300,13 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
 .gpl-scroll{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--line);box-shadow:var(--shadow-md);margin-bottom:20px}
 .gpl-grade-tbl{min-width:max-content;border-collapse:collapse;font-size:12px;background:var(--card)}
 .gpl-grade-tbl th,.gpl-grade-tbl td{padding:5px 8px;border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);vertical-align:middle;white-space:nowrap}
-.gpl-grade-tbl th{background:var(--panel);font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;text-align:center;border-bottom:2px solid var(--line)}
-.gpl-marble-row th{background:var(--navy);color:#fff;font-size:9px;letter-spacing:.5px;text-align:center;border-right:1px solid rgba(255,255,255,.15)}
-.gpl-marble{background:linear-gradient(180deg,#163c66,var(--navy))}
-.gpl-grade-th{background:var(--panel2)!important;min-width:82px}
-.gpl-grade-th span{display:block;font-size:9px;font-weight:700;color:var(--navy2)}
-.gpl-grade-th i{display:block;font-style:normal;font-size:8px;color:var(--muted);font-weight:600;margin-top:1px}
-.gpl-sticky{position:sticky;left:0;z-index:2;background:var(--card)!important;border-right:2px solid var(--line)!important;min-width:140px;max-width:200px;white-space:normal;font-weight:600;color:var(--navy2)}
-.gpl-grade-tbl thead th.gpl-sticky{background:var(--navy)!important;color:#fff;z-index:3}
-.gpl-extra-col{min-width:90px;background:var(--panel)!important;border-right:2px solid var(--line)!important}
+.gpl-grade-tbl th{background:var(--navy);color:#fff;font-size:9px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;text-align:center;border-bottom:2px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.15)}
+.gpl-grade-th{min-width:82px;vertical-align:top!important}
+.gpl-grade-th span{display:block;font-size:9px;font-weight:700;color:#fff}
+.gpl-grade-th i{display:block;font-style:normal;font-size:8px;color:rgba(255,255,255,.55);font-weight:500;margin-top:1px}
+.gpl-sticky{position:sticky;left:0;z-index:2;background:var(--card)!important;border-right:2px solid rgba(0,0,0,.12)!important;min-width:140px;max-width:200px;white-space:normal;font-weight:600;color:var(--navy2)}
+.gpl-grade-tbl thead th.gpl-sticky{background:var(--navy)!important;color:#fff;z-index:3;text-align:left}
+.gpl-extra-col{min-width:90px;background:rgba(255,255,255,.06)!important;text-align:center!important;border-right:1px solid rgba(255,255,255,.15)!important}
 .gpl-grade-cell{padding:4px 6px!important;text-align:center}
 .gpl-grade-inp{width:66px;padding:3px 5px;font-size:11.5px;text-align:right}
 .gpl-winner-inp{border-color:var(--green)!important;background:var(--green-soft)!important;color:var(--green)!important;font-weight:700}
@@ -1099,28 +1097,19 @@ function makeGradeTableScroller(){
 }
 
 function buildGradeHead(tbl,extraCols){
-  // row 1: marbling values spanning grades
+  // single header row: Cut | extraCols | grade cols (each shows grade + marbling)
   const thead=document.createElement('thead');
-  const mr=document.createElement('tr');mr.className='gpl-marble-row';
-  const thCut=document.createElement('th');thCut.rowSpan=2;thCut.className='gpl-sticky';thCut.textContent='Cut';mr.appendChild(thCut);
-  extraCols.forEach(ec=>{const th=document.createElement('th');th.rowSpan=2;th.className='num gpl-extra-col';th.innerHTML=ec;mr.appendChild(th);});
-  // group marbling headers
-  const mGroups=[];
-  GRADES.forEach(g=>{
-    const last=mGroups[mGroups.length-1];
-    if(last&&last.m===g.marbling)last.n++;
-    else mGroups.push({m:g.marbling,n:1});
+  const row=document.createElement('tr');
+  const thCut=document.createElement('th');thCut.className='gpl-sticky';thCut.textContent='Cut';row.appendChild(thCut);
+  extraCols.forEach(ec=>{
+    const th=document.createElement('th');th.className='num gpl-extra-col';th.innerHTML=ec;row.appendChild(th);
   });
-  mGroups.forEach(mg=>{const th=document.createElement('th');th.colSpan=mg.n;th.className='num gpl-marble';th.textContent=mg.m?'◆ '+mg.m:'—';mr.appendChild(th);});
-  thead.appendChild(mr);
-  // row 2: grade names
-  const gr=document.createElement('tr');gr.className='gpl-grade-row';
   GRADES.forEach(g=>{
     const th=document.createElement('th');th.className='num gpl-grade-th';
-    th.innerHTML=`<span>${esc(g.label)}</span>${g.sub?`<i>${esc(g.sub)}</i>`:''}`;
-    gr.appendChild(th);
+    th.innerHTML=`<span>${esc(g.label)}</span>${g.sub?`<i>${esc(g.sub)}</i>`:''}${g.marbling?`<i>mb ${esc(g.marbling)}</i>`:''}`;
+    row.appendChild(th);
   });
-  thead.appendChild(gr);
+  thead.appendChild(row);
   tbl.appendChild(thead);
   return tbl;
 }
