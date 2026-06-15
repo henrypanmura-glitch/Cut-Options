@@ -527,7 +527,7 @@ function buildState(src){
     s.order.push(cat);
     s.cats[cat]=src.cats[cat].map(blk=>({
       id:nid(),title:blk.title,note:blk.note||'',mode:blk.mode||'pct',
-      include:blk.include!==false,sel:blk.sel||0,
+      include:blk.include===true,sel:blk.sel||0,
       options:blk.options.map(o=>({
         id:nid(),name:o.name,
         rows:o.rows.map(r=>({id:nid(),cut:r[0],price:+r[1]||0,q:+r[2]||0,labour:+(r[3]||0)}))
