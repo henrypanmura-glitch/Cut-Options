@@ -378,6 +378,14 @@ const DEFAULTS={
      options:[
       {name:"Whole PE Brisket",rows:[["PE BRISKET",12.44,0.036,0]]},
       {name:"Deckle off",rows:[["PE DECKLE OFF",13.8,0.031,0],["Deckle",11.2,0.0035,0],["65cl",6.5,0.0015,0],["Fat",2.4,0,0]]}]},
+    {title:"DECKLE PIECES — Packed vs Trim",
+     options:[
+      {name:"Packed",rows:[["Deckle Pieces",18.37,0.0013,0]]},
+      {name:"Trim",rows:[["Deckle Pieces",9.20,0.0013,0]]}]},
+    {title:"DINGO BAIT — Packed vs Trim",
+     options:[
+      {name:"Packed",rows:[["Dingo Bait",20.00,0.0025,0]]},
+      {name:"Trim",rows:[["Dingo Bait",4.50,0.0025,0]]}]},
     {title:"WHOLE PEDO vs DENUDED ",
      options:[
       {name:"Whole PEDO",rows:[["PEDO",4.1,0.031,0]]},
@@ -393,12 +401,24 @@ const DEFAULTS={
       {name:"Chuck Eye Roll + Tail Flap",rows:[["CHUCK EYE ROLL",15.67,0.039,0],["Chuck Tail Flap",20.09,0.004,0],["Trim 85cl",11.3,0.0045,0],["Chuck Roll End",10.93,0.0095,0],["Fat",3,0.003,0]]}]},
     {title:"SHORT RIB",
      options:[
-      {name:"Bone-in Short Rib",rows:[["B/IN SHORT RIB",17.5,0.008,0]]},
-      {name:"Boneless Short Rib",rows:[["B/LESS SHORT RIB",31,0.005,0],["Bone / waste",0.1,0.003,0]]}]},
+      {name:"Bone-in 4 Rib Short Rib",rows:[["4 Rib Short Rib",22,0.0121,0]]},
+      {name:"Boneless Short Rib",rows:[["B/L Short Rib",64,0.0066,0],["Short Intercostals",32,0.0016,0],["Short Bones (rendered)",0.30,0.0039,0]]}]},
     {title:"CHUCK RIB",
      options:[
-      {name:"Bone-in Chuck Rib",rows:[["B/IN CHUCK RIB",16.5,0.0072,0]]},
-      {name:"Boneless Chuck Rib",rows:[["B/LESS CHUCK RIB",22.5,0.006,0],["Bone / waste",0.1,0.0012,0]]}]},
+      {name:"Bone-in 3 Rib Chuck Rib",rows:[["3 Rib Chuck Rib",16,0.0083,0]]},
+      {name:"Boneless Chuck Rib",rows:[["B/L Chuck Rib",32,0.0058,0],["Chuck Intercostals",32,0.0009,0],["Chuck Bones (rendered)",0.30,0.0016,0]]}]},
+    {title:"BACK RIB",
+     options:[
+      {name:"Bone-in Back Rib",rows:[["Back Rib",12,0.0059,0]]},
+      {name:"Boneless Back Rib",rows:[["Back Rib Intercostals",32,0.0030,0],["Back Rib Bones (rendered)",0.30,0.0029,0]]}]},
+    {title:"SPARE RIB",
+     options:[
+      {name:"Bone-in Spare Rib",rows:[["Spare Rib",5,0.0049,0]]},
+      {name:"Boneless Spare Rib",rows:[["Spare Rib Intercostals",13,0.0019,0],["Spare Rib Bones (rendered)",0.30,0.0030,0]]}]},
+    {title:"BRISKET PLATE",
+     options:[
+      {name:"Full Bone-in",rows:[["Full Brisket Plate",2,0.0311,0]]},
+      {name:"Boneless Intercostals",rows:[["Cranial Intercostals",32,0.0021,0],["Cranial Intercostals (Out)",1.50,0.0142,0],["Caudal Intercostals",32,0.0027,0],["Caudal Intercostals (Out)",1.50,0.0099,0]]}]},
     {title:"Short + Chuck Rib — separate vs combined",
      options:[
       {name:"Separate (Short + Chuck, b/in)",rows:[["B/IN SHORT RIB",21,0.0093,0],["B/IN CHUCK RIB",19,0.0101,0]]},
@@ -438,7 +458,11 @@ const DEFAULTS={
      options:[
       {name:"Bone-in Hind Shank",rows:[["B/IN HINDSHANK",5,0.0245,0],["Trim 85cl",5.1,0.00043,0],["Fat",0.6,0.00112,0],["Bone",0.2,0.02096,0],["Whiz trim",3,0.00056,0],["Tip",0,0.0098,0]]},
       {name:"IW/VAC Shank Meat",rows:[["Shank meat",7.5,0.01671,0],["Trim 85cl",5.1,0.00043,0],["Fat",0.6,0.00112,0],["Bone",0.2,0.02857,0],["Whiz trim",3,0.00071,0],["Tip",0,0.0098,0]]},
-      {name:"Taiwan Shank",rows:[["Taiwan shank",9.5,0.00522,0],["Trim 85cl",5.1,0.011,0],["Fat",0.6,0.00203,0],["Bone",0.2,0.02857,0],["Whiz trim",3,0.00071,0],["Tip",0,0.0098,0]]}]}
+      {name:"Taiwan Shank",rows:[["Taiwan shank",9.5,0.00522,0],["Trim 85cl",5.1,0.011,0],["Fat",0.6,0.00203,0],["Bone",0.2,0.02857,0],["Whiz trim",3,0.00071,0],["Tip",0,0.0098,0]]}]},
+    {title:"SHIN SHANK",
+     options:[
+      {name:"Packed",rows:[["Shin Shank",17.80,0.038,0]]},
+      {name:"Trim",rows:[["Shin Shank",13.50,0.038,0]]}]}
   ],
   "DENUDING":[
     {title:"INSIDE",
