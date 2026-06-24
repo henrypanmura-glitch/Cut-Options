@@ -296,10 +296,13 @@ input.n[readonly]:hover{border-color:var(--line2);box-shadow:none}
 .gpl-master-price{font-weight:700;color:var(--navy);white-space:nowrap;text-align:center}
 .gpl-empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 20px}
 /* grade-column table */
-.gpl-scroll{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);border-radius:var(--r-lg);border:1px solid var(--line);box-shadow:var(--shadow-md);margin-bottom:20px;width:100%}
+.gpl-scroll{overflow-x:auto;border-radius:var(--r-lg);border:1px solid var(--line);box-shadow:var(--shadow-md);margin-bottom:20px;width:100%;position:relative}
+.gpl-sticky-header{position:fixed;top:0;left:0;z-index:100;overflow:hidden;pointer-events:none;display:none}
+.gpl-sticky-header table{border-collapse:collapse;table-layout:fixed}
+.gpl-sticky-header th{background:var(--navy);color:#fff;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;text-align:center;border-right:1px solid rgba(255,255,255,.12);padding:4px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
 .gpl-grade-tbl{width:100%;border-collapse:collapse;font-size:11.5px;background:var(--card);table-layout:fixed}
 .gpl-grade-tbl th,.gpl-grade-tbl td{padding:4px 5px;border-bottom:1px solid var(--line2);border-right:1px solid var(--line2);vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gpl-grade-tbl th{background:var(--navy);color:#fff;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;text-align:center;border-bottom:2px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.12);position:sticky;top:0;z-index:2}
+.gpl-grade-tbl th{background:var(--navy);color:#fff;font-size:8.5px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;text-align:center;border-bottom:2px solid rgba(255,255,255,.2);border-right:1px solid rgba(255,255,255,.12)}
 .gpl-grade-th{width:72px;vertical-align:top!important}
 .gpl-grade-th span{display:block;font-size:8.5px;font-weight:700;color:#fff;line-height:1.2}
 .gpl-grade-th i{display:block;font-style:normal;font-size:7.5px;color:rgba(255,255,255,.55);font-weight:500;margin-top:1px}
@@ -1065,6 +1068,9 @@ function optEl(blk,o,oi){
 /* best price for a cut within one region (across all salesmen) */
 
 function renderGlobalPriceList(){
+  // clean up any sticky header clones from previous render
+  document.querySelectorAll('.gpl-sticky-header').forEach(el=>el.remove());
+  document.querySelectorAll('.gpl-grade-tbl').forEach(tbl=>{if(tbl._cleanupSticky)tbl._cleanupSticky();});
   const wrap=document.getElementById('wrap');wrap.innerHTML='';
   wrap.className='wrap';wrap.style.maxWidth='none';
 
@@ -1103,7 +1109,51 @@ function renderGlobalPriceList(){
 function makeGradeTableScroller(){
   const outer=document.createElement('div');outer.className='gpl-scroll';
   const tbl=document.createElement('table');tbl.className='gpl-table gpl-grade-tbl';
-  outer.appendChild(tbl);return {outer,tbl};
+  outer.appendChild(tbl);
+
+  // JS sticky header: clone thead and pin to viewport top when real thead scrolls off
+  let stickyEl=null;
+  function syncSticky(){
+    if(!tbl.tHead)return;
+    const outerRect=outer.getBoundingClientRect();
+    const theadRect=tbl.tHead.getBoundingClientRect();
+    const visible=theadRect.bottom<0&&outerRect.bottom>0;
+    if(visible){
+      if(!stickyEl){
+        stickyEl=document.createElement('div');stickyEl.className='gpl-sticky-header';
+        const stbl=document.createElement('table');stbl.className='gpl-grade-tbl';
+        stbl.appendChild(tbl.tHead.cloneNode(true));
+        stickyEl.appendChild(stbl);document.body.appendChild(stickyEl);
+      }
+      // sync column widths from real table
+      const realCols=tbl.tHead.querySelectorAll('th');
+      const cloneCols=stickyEl.querySelectorAll('th');
+      realCols.forEach((th,i)=>{if(cloneCols[i])cloneCols[i].style.width=th.offsetWidth+'px';});
+      // sync horizontal scroll
+      const left=outerRect.left;
+      stickyEl.style.display='block';
+      stickyEl.style.left=left+'px';
+      stickyEl.style.width=outerRect.width+'px';
+      stickyEl.querySelector('table').style.marginLeft=-outer.scrollLeft+'px';
+    } else if(stickyEl){
+      stickyEl.style.display='none';
+    }
+  }
+  // rebuild clone when content changes (new render)
+  const observer=new MutationObserver(()=>{if(stickyEl){stickyEl.remove();stickyEl=null;}});
+  outer.addEventListener('scroll',syncSticky);
+  window.addEventListener('scroll',syncSticky,{passive:true});
+  // cleanup on re-render
+  const origAppend=outer.appendChild.bind(outer);
+  tbl._syncSticky=syncSticky;
+  tbl._cleanupSticky=()=>{
+    window.removeEventListener('scroll',syncSticky);
+    outer.removeEventListener('scroll',syncSticky);
+    observer.disconnect();
+    if(stickyEl){stickyEl.remove();stickyEl=null;}
+  };
+  observer.observe(tbl,{childList:true,subtree:false});
+  return {outer,tbl};
 }
 
 function buildGradeHead(tbl,extraCols){
