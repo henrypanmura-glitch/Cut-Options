@@ -1307,7 +1307,7 @@ function recalc(){
       const baseNet=optNet(blk,blk.options[0]);
       blk.options.forEach((o,oi)=>{
         o.rows.forEach(r=>{
-          const c=document.querySelector(`[data-rowval="${r.id}"]`);if(c)c.textContent=fmtMoney(rowVal(blk,r));
+          const c=document.querySelector(`[data-rowval="${r.id}"]`);if(c)c.textContent=fmtMoney(rowVal(blk,r)-labourVal(blk,r));
           const w=document.querySelector(`[data-rowwt="${r.id}"]`);if(w)w.textContent=rowWeight(blk,r).toFixed(1)+' kg';
         });
         const net=optNet(blk,o);
